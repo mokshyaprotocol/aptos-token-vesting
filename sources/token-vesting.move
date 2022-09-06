@@ -81,14 +81,15 @@ module token_vesting::acl_based_mb {
         let now = now_seconds();
         while (i < length_of_schedule)
         {
-            if (vesting_data[i].release_time>=now)
+            let tmp = vector::borrow<Schedule>(&vesting_data.schedule,i);
+            if (tmp.release_time>=now)
             {
-                amount_to_be_released=amount_to_be_released+vesting_data[i].release_amount;
+                amount_to_be_released=amount_to_be_released+tmp.release_amount;
             };
             i=i+1;
         };
         amount_to_be_released=amount_to_be_released-vesting_data.released_amount;
-        let escrow_addr = signer::address_of(&vesting); 
+        //let escrow_addr = signer::address_of(&vesting); 
         coin::transfer<CoinType>(&vesting_signer_from_cap,receiver_addr,amount_to_be_released);
     }
 }

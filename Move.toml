@@ -6,4 +6,4 @@ version = '1.0.0'
 token_vesting = "_"
 
 [dependencies]
-AptosFramework = { local = "/Users/evilboyajay/aptos-core/aptos-move/framework/aptos-framework" }
+AptosFramework = { local = "/Users/samundrakarki/aptos-core/aptos-move/framework/aptos-framework" }
