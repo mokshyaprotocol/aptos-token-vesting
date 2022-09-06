@@ -12,7 +12,9 @@ module token_vesting::acl_based_mb {
         sender: address,
         receiver: address,
         // coin_type:coin::Coin<CoinType>,
-        schedule: vector<Schedule>,
+        //schedule: vector<Schedule>,
+        release_times:vector<u64>,
+        release_amounts:vector<u64>,
         total_amount:u64,
         resource_cap: account::SignerCapability,
         released_amount:u64,
@@ -29,20 +31,23 @@ module token_vesting::acl_based_mb {
     public entry fun create_vesting<CoinType>(
         account: &signer,
         receiver: address,
-        schedule: vector<Schedule>,
+        release_amounts:vector<u64>,
+        release_times:vector<u64>,
         total_amount:u64,
         seeds: vector<u8>
     ){
         let account_addr = signer::address_of(account);
         let (vesting, vesting_cap) = account::create_resource_account(account, seeds);
         let vesting_signer_from_cap = account::create_signer_with_capability(&vesting_cap);
-        let length_of_schedule =  vector::length(&schedule);
+        let length_of_schedule =  vector::length(&release_amounts);
+        let length_of_times = vector::length(&release_times);
+        assert!(length_of_schedule==length_of_times,ENO_INSUFFICIENT_FUND);
         let i=0;
-        let total_amount_required=0;
+        let total_amount_required:u64=0;
         while ( i < length_of_schedule )
         {
-            let tmp = vector::borrow<Schedule>(&schedule,i);
-            total_amount_required=total_amount_required+tmp.release_amount;
+            let tmp = vector::borrow(&release_amounts,i);
+            total_amount_required=total_amount_required+tmp;
             i=i+1;
         };
         assert!(total_amount_required>total_amount,ENO_INSUFFICIENT_FUND);
@@ -51,7 +56,8 @@ module token_vesting::acl_based_mb {
         sender:account_addr,
         receiver,
         // coin_type:Coin<CoinType>, 
-        schedule,
+        release_times,
+        release_amounts,
         total_amount,
         resource_cap:vesting_cap,
         released_amount,
@@ -75,16 +81,15 @@ module token_vesting::acl_based_mb {
         assert!(vesting_data.sender==sender,ENO_SENDER_MISMATCH);
         assert!(vesting_data.receiver==receiver_addr,ENO_RECEIVER_MISMATCH);
 
-        let length_of_schedule =  vector::length<Schedule>(&vesting_data.schedule);
+        let length_of_schedule =  vector::length(&vesting_data.release_amounts);
         let i=0;
         let amount_to_be_released=0;
         let now = now_seconds();
         while (i < length_of_schedule)
         {
-            let tmp = vector::borrow<Schedule>(&vesting_data.schedule,i);
-            if (tmp.release_time>=now)
+            if (vesting_data.release_times[i]>=now)
             {
-                amount_to_be_released=amount_to_be_released+tmp.release_amount;
+                amount_to_be_released=amount_to_be_released+vesting_data.release_amounts[i];
             };
             i=i+1;
         };
