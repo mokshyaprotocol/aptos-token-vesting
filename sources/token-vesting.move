@@ -5,6 +5,7 @@ module token_vesting::acl_based_mb {
     use aptos_framework::account;
      use aptos_framework::timestamp::now_seconds;
     use std::vector;
+
    // use aptos_std::event::{Self, EventHandle};
     use aptos_framework::coin::{Self};
     struct VestingSchedule has key,store{
@@ -46,7 +47,7 @@ module token_vesting::acl_based_mb {
         };
         assert!(total_amount_required>total_amount,ENO_INSUFFICIENT_FUND);
         let released_amount=0;
-        move_to(&vesting_signer_from_cap, VestingSchedule<CoinType>{
+        move_to(&vesting_signer_from_cap, VestingSchedule{
         sender:account_addr,
         receiver,
         // coin_type:Coin<CoinType>, 
@@ -72,9 +73,9 @@ module token_vesting::acl_based_mb {
      
         let vesting_data = borrow_global<VestingSchedule>(vesting_address); 
         assert!(vesting_data.sender==sender,ENO_SENDER_MISMATCH);
-        assert!(vesting_data.receiver==receiver,ENO_RECEIVER_MISMATCH);
+        assert!(vesting_data.receiver==receiver_addr,ENO_RECEIVER_MISMATCH);
 
-        let length_of_schedule =  Vector::length(&schedule);
+        let length_of_schedule =  vector::length<Schedule>(&vesting_data.schedule);
         let i=0;
         let amount_to_be_released=0;
         let now = now_seconds();
