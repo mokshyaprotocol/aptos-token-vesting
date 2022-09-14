@@ -1,33 +1,28 @@
 module token_vesting::acl_based_mb {
-    //use std::string::String;
     use std::signer;    
-    //use std::option::{Self, Option};
     use aptos_framework::account;
-     use aptos_framework::timestamp::now_seconds;
+    use aptos_framework::timestamp::now_seconds;
     use std::vector;
-
-   // use aptos_std::event::{Self, EventHandle};
-    use aptos_framework::coin::{Self};
-    struct VestingSchedule has key,store{
+    use aptos_framework::managed_coin;
+    use aptos_framework::coin;
+    use aptos_std::type_info;
+    struct VestingSchedule has key,store
+    {
         sender: address,
         receiver: address,
-        // coin_type:coin::Coin<CoinType>,
-        //schedule: vector<Schedule>,
+        coin_type:address,
         release_times:vector<u64>,
         release_amounts:vector<u64>,
         total_amount:u64,
         resource_cap: account::SignerCapability,
         released_amount:u64,
     }
-    struct Schedule has store,copy{
-        release_time:u64,
-        release_amount:u64,
-    }
     //errors
     const ENO_INSUFFICIENT_FUND:u64=0;
     const ENO_NO_VESTING:u64=1;
     const ENO_SENDER_MISMATCH:u64=2;
     const ENO_RECEIVER_MISMATCH:u64=3;
+
     public entry fun create_vesting<CoinType>(
         account: &signer,
         receiver: address,
@@ -43,26 +38,28 @@ module token_vesting::acl_based_mb {
         let length_of_times = vector::length(&release_times);
         assert!(length_of_schedule==length_of_times,ENO_INSUFFICIENT_FUND);
         let i=0;
-        let total_amount_required:u64=0;
+        let total_amount_required=0;
         while ( i < length_of_schedule )
         {
-            let tmp = vector::borrow(&release_amounts,i);
+            let tmp = *vector::borrow(&release_amounts,i);
             total_amount_required=total_amount_required+tmp;
             i=i+1;
         };
-        assert!(total_amount_required>total_amount,ENO_INSUFFICIENT_FUND);
+        assert!(total_amount_required==total_amount,ENO_INSUFFICIENT_FUND);
         let released_amount=0;
+        let coin_address = coin_address<CoinType>();
         move_to(&vesting_signer_from_cap, VestingSchedule{
         sender:account_addr,
         receiver,
-        // coin_type:Coin<CoinType>, 
+        coin_type:coin_address, 
         release_times,
         release_amounts,
         total_amount,
         resource_cap:vesting_cap,
         released_amount,
         });
-        let escrow_addr = signer::address_of(&vesting); 
+        let escrow_addr = signer::address_of(&vesting);
+        managed_coin::register<CoinType>(&vesting_signer_from_cap); 
         coin::transfer<CoinType>(account, escrow_addr, total_amount);
 
     }
@@ -76,7 +73,6 @@ module token_vesting::acl_based_mb {
         let vesting_signer_from_cap = account::create_signer_with_capability(&vesting_cap);
         let vesting_address = signer::address_of(&vesting);
         assert!(exists<VestingSchedule>(vesting_address), ENO_NO_VESTING);
-     
         let vesting_data = borrow_global<VestingSchedule>(vesting_address); 
         assert!(vesting_data.sender==sender,ENO_SENDER_MISMATCH);
         assert!(vesting_data.receiver==receiver_addr,ENO_RECEIVER_MISMATCH);
@@ -87,14 +83,24 @@ module token_vesting::acl_based_mb {
         let now = now_seconds();
         while (i < length_of_schedule)
         {
-            if (vesting_data.release_times[i]>=now)
+            let tmp_amount = *vector::borrow(&vesting_data.release_amounts,i);
+            let tmp_time = *vector::borrow(&vesting_data.release_times,i);
+            if (tmp_time>=now)
             {
-                amount_to_be_released=amount_to_be_released+vesting_data.release_amounts[i];
+                amount_to_be_released=amount_to_be_released+tmp_amount;
             };
             i=i+1;
         };
         amount_to_be_released=amount_to_be_released-vesting_data.released_amount;
-        //let escrow_addr = signer::address_of(&vesting); 
+        managed_coin::register<CoinType>(receiver); 
         coin::transfer<CoinType>(&vesting_signer_from_cap,receiver_addr,amount_to_be_released);
     }
+
+     /// A helper function that returns the address of CoinType.
+    fun coin_address<CoinType>(): address {
+        let type_info = type_info::type_of<CoinType>();
+        type_info::account_address(&type_info)
+    }
 }
+
+

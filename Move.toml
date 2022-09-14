@@ -3,7 +3,7 @@ name = 'token-vesting'
 version = '1.0.0'
 
 [addresses]
-token_vesting = "_"
+token_vesting = "0xd8a362364e68619ffb45b597de6f77fe91f5194c5ec75f8954fd7d7eebfbe890"
 
 [dependencies]
 AptosFramework = { local = "/Users/samundrakarki/aptos-core/aptos-move/framework/aptos-framework" }
