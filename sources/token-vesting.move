@@ -101,6 +101,43 @@ module token_vesting::acl_based_mb {
         let type_info = type_info::type_of<CoinType>();
         type_info::account_address(&type_info)
     }
+    #[test_only] 
+   struct MokshyaCoin { }
+   #[test(creator = @0xAF, receiver = @0xBB,framework= @0x1)]
+   fun test_create_vesting(creator: &signer,receiver:&signer) {
+       account::create_account_for_test(signer::address_of(creator));
+       account::create_account_for_test(signer::address_of(receiver));
+       let receiver_addr = signer::address_of(receiver); 
+       let sender_addr = signer::address_of(creator);   
+       let now = now_seconds();
+       let release_amounts= vector<u64>[10,20,30];
+       let release_times = vector<u64>[10,20,30];
+       let total_amount=60;
+ 
+        aggregator_factory::initialize_aggregator_factory_for_test(framework);
+       managed_coin::initialize<MokshyaCoin>(
+           creator,
+           b"Mokshya Coin",
+           b"Mokshya",
+           6,
+           false,
+       );
+       managed_coin::register<MokshyaCoin>(creator);
+       managed_coin::mint<MokshyaCoin>(creator,sender_addr,100);    
+       create_vesting<MokshyaCoin>(
+               creator,
+               receiver_addr,
+               release_amounts,
+               release_times,
+               total_amount,
+               b"1bc");
+      release_fund<MokshyaCoin>(
+           receiver,
+           sender_addr,
+           b"1bc"
+       );
+   } 
+
 }
 
 
