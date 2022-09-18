@@ -1,7 +1,7 @@
 module token_vesting::acl_based_mb {
     use std::signer;    
     use aptos_framework::account;
-    use aptos_framework::timestamp::now_seconds;
+    // use aptos_framework::timestamp::now_seconds;
     use std::vector;
     use aptos_framework::managed_coin;
     use aptos_framework::coin;
@@ -67,21 +67,19 @@ module token_vesting::acl_based_mb {
      public entry fun release_fund<CoinType>(
         receiver: &signer,
         sender: address,
-        seeds: vector<u8>,
+        vesting_address: address,
     )acquires VestingSchedule{
-        let receiver_addr = signer::address_of(receiver);        
-        let (vesting, vesting_cap) = account::create_resource_account(receiver, seeds);
-        let vesting_signer_from_cap = account::create_signer_with_capability(&vesting_cap);
-        let vesting_address = signer::address_of(&vesting);
-        assert!(exists<VestingSchedule>(vesting_address), ENO_NO_VESTING);
+        let receiver_addr = signer::address_of(receiver);      
+        assert!(exists<VestingSchedule>(vesting_address), ENO_NO_VESTING);  
         let vesting_data = borrow_global<VestingSchedule>(vesting_address); 
+        let vesting_signer_from_cap = account::create_signer_with_capability(&vesting_data.resource_cap);
         assert!(vesting_data.sender==sender,ENO_SENDER_MISMATCH);
         assert!(vesting_data.receiver==receiver_addr,ENO_RECEIVER_MISMATCH);
 
         let length_of_schedule =  vector::length(&vesting_data.release_amounts);
         let i=0;
         let amount_to_be_released=0;
-        let now = now_seconds();
+        let now = aptos_framework::timestamp::now_seconds();
         while (i < length_of_schedule)
         {
             let tmp_amount = *vector::borrow(&vesting_data.release_amounts,i);
@@ -122,7 +120,8 @@ module token_vesting::acl_based_mb {
             10,
             true
         );
-    //    let _ = aptos_framework::timestamp::now_seconds;
+        // use aptos_framework::timestamp::now_seconds;
+    //    let _ = aptos_framework::timestamp::now_seconds();
        let release_amounts= vector<u64>[10,20,30];
        let release_times = vector<u64>[10,20,30];
        let total_amount=60;
@@ -135,10 +134,12 @@ module token_vesting::acl_based_mb {
                release_times,
                total_amount,
                b"1bc");
+        let vesting_address = aptos_framework::account::create_resource_address(&sender_addr, b"1bc");
+        //  let vesting_address = signer::address_of(&vesting);
       release_fund<FakeMoney>(
            &receiver,
            sender_addr,
-           b"1bc"
+           vesting_address
        );
    } 
 
