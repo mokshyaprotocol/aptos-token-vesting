@@ -3,10 +3,10 @@ module token_vesting::acl_based_mb {
     use aptos_framework::account;
     use aptos_framework::timestamp::now_seconds;
     use std::vector;
-    use aptos_framework::aggregator_factory;
     use aptos_framework::managed_coin;
     use aptos_framework::coin;
     use aptos_std::type_info;
+
     struct VestingSchedule has key,store
     {
         sender: address,
@@ -103,38 +103,40 @@ module token_vesting::acl_based_mb {
         type_info::account_address(&type_info)
     }
     #[test_only] 
-   struct MokshyaCoin { }
-   #[test(creator = @0xa11ce, receiver = @0xa11ce,framework= @0x1)]
-   fun test_create_vesting(creator: &signer,receiver:&signer,framework:&signer) acquires VestingSchedule{
-       account::create_account_for_test(signer::address_of(creator));
-       account::create_account_for_test(signer::address_of(receiver));
-    //    account::create_account_for_test(signer::address_of(&framework));
-       let receiver_addr = signer::address_of(receiver); 
-       let sender_addr = signer::address_of(creator);   
-       let now = now_seconds();
+    struct FakeMoney { }
+
+    #[test(creator = @0xa11ce, receiver = @0xb0b, token_vesting = @token_vesting)]
+   fun test_create_vesting(
+        creator: signer,
+        receiver: signer,
+        token_vesting: signer
+    ) acquires VestingSchedule{
+       let sender_addr = signer::address_of(&creator);
+        let receiver_addr = signer::address_of(&receiver);
+        aptos_framework::account::create_account_for_test(sender_addr);
+        aptos_framework::account::create_account_for_test(receiver_addr);
+        aptos_framework::managed_coin::initialize<FakeMoney>(
+            &token_vesting,
+            b"Fake Money",
+            b"FMD",
+            10,
+            true
+        );
+    //    let _ = aptos_framework::timestamp::now_seconds;
        let release_amounts= vector<u64>[10,20,30];
        let release_times = vector<u64>[10,20,30];
        let total_amount=60;
- 
-    //    aggregator_factory::initialize_aggregator_factory_for_test(&framework);
-       managed_coin::initialize<MokshyaCoin>(
-           creator,
-           b"Mokshya Coin",
-           b"Mokshya",
-           6,
-           false,
-       );
-       managed_coin::register<MokshyaCoin>(creator);
-       managed_coin::mint<MokshyaCoin>(creator,sender_addr,100);    
-       create_vesting<MokshyaCoin>(
-               creator,
+       aptos_framework::managed_coin::register<FakeMoney>(&creator);
+       aptos_framework::managed_coin::mint<FakeMoney>(&token_vesting,sender_addr,100000000);    
+       create_vesting<FakeMoney>(
+               &creator,
                receiver_addr,
                release_amounts,
                release_times,
                total_amount,
                b"1bc");
-      release_fund<MokshyaCoin>(
-           receiver,
+      release_fund<FakeMoney>(
+           &receiver,
            sender_addr,
            b"1bc"
        );
