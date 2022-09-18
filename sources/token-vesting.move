@@ -3,6 +3,7 @@ module token_vesting::acl_based_mb {
     use aptos_framework::account;
     use aptos_framework::timestamp::now_seconds;
     use std::vector;
+    use aptos_framework::aggregator_factory;
     use aptos_framework::managed_coin;
     use aptos_framework::coin;
     use aptos_std::type_info;
@@ -103,10 +104,11 @@ module token_vesting::acl_based_mb {
     }
     #[test_only] 
    struct MokshyaCoin { }
-   #[test(creator = @0xAF, receiver = @0xBB,framework= @0x1)]
-   fun test_create_vesting(creator: &signer,receiver:&signer) {
+   #[test(creator = @0xa11ce, receiver = @0xa11ce,framework= @0x1)]
+   fun test_create_vesting(creator: &signer,receiver:&signer,framework:&signer) acquires VestingSchedule{
        account::create_account_for_test(signer::address_of(creator));
        account::create_account_for_test(signer::address_of(receiver));
+    //    account::create_account_for_test(signer::address_of(&framework));
        let receiver_addr = signer::address_of(receiver); 
        let sender_addr = signer::address_of(creator);   
        let now = now_seconds();
@@ -114,7 +116,7 @@ module token_vesting::acl_based_mb {
        let release_times = vector<u64>[10,20,30];
        let total_amount=60;
  
-        aggregator_factory::initialize_aggregator_factory_for_test(framework);
+    //    aggregator_factory::initialize_aggregator_factory_for_test(&framework);
        managed_coin::initialize<MokshyaCoin>(
            creator,
            b"Mokshya Coin",
