@@ -23,7 +23,7 @@ Update program address inside tests **vesting.ts**
 
 # Run test
 
-yarn test
+```yarn test```
 
 # Contributions
 
