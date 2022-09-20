@@ -106,7 +106,9 @@ module token_vesting::acl_based_mb {
             i=i+1;
         };
         amount_to_be_released=amount_to_be_released-vesting_data.released_amount;
-        managed_coin::register<CoinType>(receiver); 
+        if (!coin::is_account_registered<CoinType>(receiver_addr))
+        {managed_coin::register<CoinType>(receiver); 
+        };
         coin::transfer<CoinType>(&vesting_signer_from_cap,receiver_addr,amount_to_be_released);
     }
      /// A helper function that returns the address of CoinType.

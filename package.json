@@ -3,6 +3,10 @@
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
+    "scripts": {
+      "vesting": "ts-node tests/vesting.ts",
+      "test": "run-s vesting"
+    },
     "keywords": [],
     "author": "",
     "license": "ISC",
