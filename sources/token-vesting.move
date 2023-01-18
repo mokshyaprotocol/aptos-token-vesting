@@ -1,4 +1,4 @@
-module token_vesting::acl_based_mb {
+module token_vesting::vesting {
     use std::signer;    
     use aptos_framework::account;
     use std::vector;
@@ -135,9 +135,9 @@ module token_vesting::acl_based_mb {
             10,
             true
         );
-    // let now  = aptos_framework::timestamp::now_seconds(); // doesn't work in test script
+        // let now  = aptos_framework::timestamp::now_seconds(); // doesn't work in test script
        let release_amounts= vector<u64>[10,20,30];
-    //tested with below time as now_seconds doesn't work in test scripts
+        //tested with below time as now_seconds doesn't work in test scripts
        let release_times = vector<u64>[10,20,30];
        let total_amount=60;
        aptos_framework::managed_coin::register<MokshyaMoney>(&creator);
@@ -153,7 +153,7 @@ module token_vesting::acl_based_mb {
             coin::balance<MokshyaMoney>(sender_addr)==40,
             ENO_WRONG_SENDER,
         );    
-      release_fund<MokshyaMoney>(
+        release_fund<MokshyaMoney>(
            &receiver,
            sender_addr,
             b"1bc"
