@@ -86,7 +86,7 @@ module token_vesting::vesting {
         let maps = borrow_global<VestingCap>(sender);
         let vesting_address = *simple_map::borrow(&maps.vestingMap, &seeds);
         assert!(exists<VestingSchedule>(vesting_address), ENO_NO_VESTING);  
-        let vesting_data = borrow_global<VestingSchedule>(vesting_address); 
+        let vesting_data = borrow_global_mut<VestingSchedule>(vesting_address); 
         let vesting_signer_from_cap = account::create_signer_with_capability(&vesting_data.resource_cap);
         assert!(vesting_data.sender==sender,ENO_SENDER_MISMATCH);
         assert!(vesting_data.receiver==receiver_addr,ENO_RECEIVER_MISMATCH);
@@ -94,12 +94,11 @@ module token_vesting::vesting {
         let i=0;
         let amount_to_be_released=0;
         let now = aptos_framework::timestamp::now_seconds();
-       // let now = 25;   //tested with this time as now_seconds doesn't work in test scripts
         while (i < length_of_schedule)
         {
             let tmp_amount = *vector::borrow(&vesting_data.release_amounts,i);
             let tmp_time = *vector::borrow(&vesting_data.release_times,i);
-            if (tmp_time>=now)
+            if (tmp_time<=now)
             {
                 amount_to_be_released=amount_to_be_released+tmp_amount;
             };
@@ -110,6 +109,7 @@ module token_vesting::vesting {
         {managed_coin::register<CoinType>(receiver); 
         };
         coin::transfer<CoinType>(&vesting_signer_from_cap,receiver_addr,amount_to_be_released);
+        vesting_data.released_amount=vesting_data.released_amount+amount_to_be_released;
     }
      /// A helper function that returns the address of CoinType.
     fun coin_address<CoinType>(): address {

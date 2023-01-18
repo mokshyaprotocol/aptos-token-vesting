@@ -22,8 +22,8 @@ const pid="0x4bfd86460187924e73972db0b68e5f1b983e02aca6e979e31483685e14738b74";
     const now = Math.floor(Date.now() / 1000)
     //Any discrete amount and corresponding time 
     //can be provided to get variety of payment schedules
-    const release_amount =[20, 30, 40, 50];
-    const release_time_increment =[ 15, 20, 30];
+    const release_amount =[10000, 50000, 10000, 30000];
+    const release_time_increment =[ 3, 20, 30];
     var release_time:BigInt[]=[BigInt(now)]
     release_time_increment.forEach((item) => {
       let val=BigInt(now+item);
@@ -33,13 +33,14 @@ const pid="0x4bfd86460187924e73972db0b68e5f1b983e02aca6e979e31483685e14738b74";
       type: "entry_function_payload",
       function: pid+"::vesting::create_vesting",
       type_arguments: ["0x1::aptos_coin::AptosCoin"],
-      arguments: [account2.address(),release_amount,release_time,140,"xyz"],
+      arguments: [account2.address(),release_amount,release_time,100000,"xyz"],
     };
     let txnRequest = await client.generateTransaction(account1.address(), create_vesting_payloads);
     let bcsTxn = AptosClient.generateBCSTransaction(account1, txnRequest);
-    await client.submitSignedBCSTransaction(bcsTxn);
+    let x = await client.submitSignedBCSTransaction(bcsTxn);
+    console.log(x);
   });
-  //Functio
+  //Function
   it ("Get Funds", async () => {
     await faucetClient.fundAccount(account2.address(), 1000000000);//Airdropping
     //the receiver gets allocated fund as required
@@ -51,7 +52,9 @@ const pid="0x4bfd86460187924e73972db0b68e5f1b983e02aca6e979e31483685e14738b74";
     };
     let txnRequest = await client.generateTransaction(account2.address(), create_getfunds_payloads);
     let bcsTxn = AptosClient.generateBCSTransaction(account2, txnRequest);
-    await client.submitSignedBCSTransaction(bcsTxn);
+    let x=await client.submitSignedBCSTransaction(bcsTxn);
+    console.log(x);
   });
+
 
 });
