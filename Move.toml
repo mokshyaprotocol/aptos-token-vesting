@@ -8,5 +8,8 @@ token_vesting = "_"
 Std = "0x1"
 aptos_std = "0x1"
 
-[dependencies]
-AptosFramework = { local = "../../aptos-core/aptos-move/framework/aptos-framework"}
+[dependencies.AptosFramework]
+git = 'https://github.com/aptos-labs/aptos-core.git'
+rev = 'main'
+subdir = 'aptos-move/framework/aptos-framework'
+
